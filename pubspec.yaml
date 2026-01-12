@@ -10,6 +10,41 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
+  
+  # State Management
+  flutter_riverpod: ^2.5.1
+  
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.3
+  
+  # UI & Navigation
+  go_router: ^14.2.7
+  
+  # Date & Time
+  intl: ^0.19.0
+  
+  # HTTP & API
+  http: ^1.2.2
+  dio: ^5.7.0
+  
+  # Local Storage
+  shared_preferences: ^2.3.2
+  
+  # WebView for Iamport
+  webview_flutter: ^4.9.0
+  webview_flutter_android: ^3.15.0
+  
+  # Phone Number
+  phone_numbers_parser: ^6.0.0
+  
+  # Image Loading
+  cached_network_image: ^3.4.1
+  
+  # Utils
+  uuid: ^4.5.1
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

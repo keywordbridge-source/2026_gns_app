@@ -75,6 +75,11 @@ app.*.map.json
 # Web related
 lib/generated_plugin_registrant.dart
 
+# Keystore files
+*.keystore
+*.jks
+key.properties
+
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock

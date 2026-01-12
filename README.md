@@ -1,105 +1,137 @@
-# 2026 GNS App
+# 2026 GNS App - 레고 브릭 빌드업 예약 시스템
 
-Flutter로 개발된 2026 GNS App입니다.
+Flutter로 개발된 레고 브릭 빌드업 예약 시스템입니다.
 
 ## 프로젝트 개요
 
-2026 GNS App은 Flutter 프레임워크를 사용하여 개발된 크로스 플랫폼 모바일 애플리케이션입니다.
+회사가 직영하는 커피매장에서 레고브릭을 빌드업 할 수 있도록 예약시스템을 제공하는 모바일 애플리케이션입니다.
+
+## 기술 스택
+
+- **Flutter**: 크로스 플랫폼 프레임워크
+- **Riverpod**: 상태 관리
+- **Firebase**: 백엔드 (Firestore, Authentication)
+- **GoRouter**: 네비게이션
+- **Iamport**: 결제 시스템
+
+## 개발 환경
+
+- Flutter 버전: 고정 (변경 불가)
+- JDK 버전: 17
+- 패키지명: `com.example.gns_app_2026` (변경 불가)
+- 상태관리: Riverpod
+- 대상 플랫폼: Android (APK / Play Store)
+
+## 주요 기능
+
+### 1. 예약 플로우
+- 빌드업 키트 선택 (31개)
+- 이용시간 선택 (1시간/2시간/4시간)
+- 날짜 및 시작시간 선택 (오전 9시 ~ 오후 5시)
+- 좌석 선택 (시간당 10자리)
+- 예약자 정보 입력 (이름, 휴대전화 인증, 비밀번호 4자리)
+- 아임포트 결제
+
+### 2. 내 예약
+- 예약자 이름/비밀번호로 로그인
+- 예약 확인 및 취소
+- 취소 수수료 계산 (3일전 무료, 2일전 20%, 1일전 50%, 당일 100%)
+
+### 3. 관리자 환경
+- 일일/주간 매출 조회
+- 예약 관리 (수동 예약, 변경, 삭제)
+- 환불 처리
+- 사용 시작 버튼
+- 추가 요금 확인 (1분당 300원)
+
+## 요금 체계
+
+- 1시간: 10,000원
+- 2시간: 20,000원
+- 4시간: 30,000원
+- 추가 요금: 사용시간 종료 후 1분당 300원
 
 ## 시작하기
 
 ### 필수 요구사항
 
-- Flutter SDK (버전 3.0.0 이상)
-- Dart SDK (Flutter와 함께 설치됨)
-- Android Studio 또는 VS Code (선택사항)
-- Android SDK (Android 개발용)
-- Xcode (iOS 개발용, macOS만 해당)
-
-### Flutter 설치
-
-Flutter가 설치되어 있지 않다면 [Flutter 공식 웹사이트](https://flutter.dev/docs/get-started/install)에서 설치 가이드를 참고하세요.
+- Flutter SDK
+- JDK 17
+- Android SDK
+- Firebase 프로젝트 설정
 
 ### 설치
-
-프로젝트 의존성을 설치합니다:
 
 ```bash
 flutter pub get
 ```
 
+### Firebase 설정
+
+1. Firebase Console에서 프로젝트 생성
+2. Android 앱 추가 (패키지명: `com.example.gns_app_2026`)
+3. `google-services.json` 파일을 `android/app/` 디렉토리에 추가
+4. FlutterFire CLI로 설정 파일 생성:
+   ```bash
+   flutterfire configure
+   ```
+
 ### 실행
 
-#### 모든 플랫폼에서 사용 가능한 디바이스 확인
-```bash
-flutter devices
-```
-
-#### 앱 실행
 ```bash
 flutter run
 ```
 
-#### 특정 디바이스에서 실행
-```bash
-flutter run -d <device-id>
-```
-
 ### 빌드
 
-#### Android APK 빌드
+#### Debug APK
 ```bash
-flutter build apk
+flutter build apk --debug
 ```
 
-#### Android App Bundle 빌드
+#### Release APK
 ```bash
-flutter build appbundle
+flutter build apk --release
 ```
 
-#### iOS 빌드 (macOS만 가능)
-```bash
-flutter build ios
-```
+## 개발 규칙
 
-#### Web 빌드
-```bash
-flutter build web
-```
+1. 빌드를 깨뜨릴 가능성이 있으면 작업을 중단하고 질의한다.
+2. 한 번의 작업은 하나의 목적만 수행한다.
+3. Dart 코드 수정을 우선하며, 네이티브(android/) 수정은 불가피할 때만 허용한다.
+4. 플러그인 추가는 최소화하며 Flutter 버전 호환성을 검증한다.
+5. 모든 결과물은 아래 명령어가 성공해야 한다:
+   ```bash
+   flutter pub get
+   flutter analyze
+   flutter build apk --debug
+   ```
+6. keystore는 초기에 생성하고 절대 저장소에 커밋하지 않는다.
+7. 서명 정보는 GitHub Secrets 등 보안 채널로만 관리한다.
 
 ## 프로젝트 구조
 
 ```
 lib/
-  main.dart          # 앱 진입점
-test/
-  widget_test.dart   # 위젯 테스트
-android/             # Android 플랫폼 코드
-ios/                 # iOS 플랫폼 코드
-web/                 # Web 플랫폼 코드
+  config/          # 앱 설정
+  models/          # 데이터 모델
+  providers/       # Riverpod 상태 관리
+  screens/         # 화면
+    reservation_flow/  # 예약 플로우
+  services/        # 서비스 (Firebase, Iamport)
 ```
 
-## 개발
+## 아임포트 설정
 
-### 코드 포맷팅
-```bash
-flutter format .
-```
+- 테스트 모드 사용
+- 채널 키:
+  - 이니시스: `channel-key-cbc91735-ccb5-4045-8ac1-4ef3f3731e8d`
+  - 카카오페이: `channel-key-bcd6a1a1-d68f-407c-a9a1-5085029cc69b`
 
-### 코드 분석
-```bash
-flutter analyze
-```
+## 참고 자료
 
-### 테스트 실행
-```bash
-flutter test
-```
-
-## Git 저장소
-
-이 프로젝트는 다음 GitHub 저장소와 연결되어 있습니다:
-https://github.com/keywordbridge-source/2026_gns_app.git
+- 데모 사이트: https://5060-i1ytwr3anjc98ir9e40du-b32ec7bb.sandbox.novita.ai
+- UI 디자인 참고: https://ui.shadcn.com
 
 ## 라이선스
 

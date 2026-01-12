@@ -1,7 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+// import 'services/firebase_init_service.dart'; // Firebase 설정 후 주석 해제
+import 'screens/home_screen.dart';
+import 'screens/reservation_flow/kit_selection_screen.dart';
+import 'screens/reservation_flow/time_selection_screen.dart';
+import 'screens/reservation_flow/date_time_selection_screen.dart';
+import 'screens/reservation_flow/seat_selection_screen.dart';
+import 'screens/reservation_flow/customer_info_screen.dart';
+import 'screens/reservation_flow/payment_screen.dart';
+import 'screens/my_reservation_screen.dart';
+import 'screens/admin_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Firebase 초기화
+  // 실제 Firebase 프로젝트 설정 후 주석 해제
+  // await FirebaseInitService.initialize();
+  // await FirebaseInitService.initializeBuildKits();
+  
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -9,61 +28,54 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: '2026 GNS App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: '2026 GNS App'),
+      routerConfig: _router,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
+final GoRouter _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/kit-selection',
+      builder: (context, state) => const KitSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/time-selection',
+      builder: (context, state) => const TimeSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/date-time-selection',
+      builder: (context, state) => const DateTimeSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/seat-selection',
+      builder: (context, state) => const SeatSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/customer-info',
+      builder: (context, state) => const CustomerInfoScreen(),
+    ),
+    GoRoute(
+      path: '/payment',
+      builder: (context, state) => const PaymentScreen(),
+    ),
+    GoRoute(
+      path: '/my-reservation',
+      builder: (context, state) => const MyReservationScreen(),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminScreen(),
+    ),
+  ],
+);

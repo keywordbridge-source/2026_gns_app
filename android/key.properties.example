@@ -1,0 +1,8 @@
+# 키스토어 설정 파일 예시
+# 실제 사용 시 key.properties로 복사하고 값 채우기
+# 절대 커밋하지 마세요!
+
+storePassword=your_store_password
+keyPassword=your_key_password
+keyAlias=gns_app_2026
+storeFile=app/gns_app_2026.keystore
