@@ -60,6 +60,21 @@ class _IamportPaymentWebViewState extends State<IamportPaymentWebView> {
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'PaymentResult',
+        onMessageReceived: (JavaScriptMessage message) {
+          try {
+            final data = message.message;
+            if (data.contains('success')) {
+              _handlePaymentSuccessFromJS(data);
+            } else {
+              _handlePaymentFailureFromJS(data);
+            }
+          } catch (e) {
+            print('Payment result parsing error: $e');
+          }
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (String url) {
@@ -72,33 +87,48 @@ class _IamportPaymentWebViewState extends State<IamportPaymentWebView> {
               _isLoading = false;
             });
 
-            // Iamport 결제 페이지 로드 후 결제 요청
-            if (url.contains('iamport.kr') || url.contains('iamport')) {
-              _requestPayment();
-            }
-
-            // 결제 완료 URL 체크
-            if (url.contains('payment/success') || url.contains('success')) {
-              _handlePaymentSuccess(url);
-            } else if (url.contains('payment/fail') || url.contains('fail')) {
-              _handlePaymentFailure(url);
-            }
+            // Iamport SDK 로드 후 결제 요청
+            _loadIamportSDK();
           },
           onWebResourceError: (WebResourceError error) {
-            Navigator.of(context).pop({'success': false, 'error': error.description});
+            if (mounted) {
+              Navigator.of(context).pop({
+                'success': false,
+                'error': error.description,
+              });
+            }
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://www.iamport.kr/mobile'));
+      ..loadRequest(Uri.parse('data:text/html;charset=utf-8,${Uri.encodeComponent(_getPaymentHTML())}'));
   }
 
-  void _requestPayment() {
-    // Iamport v2 결제 요청 JavaScript
-    final paymentScript = '''
-      IMP.init('${widget.channelKey}');
-      
+  String _getPaymentHTML() {
+    final pg = widget.channelKey.contains('kakao') ? 'kakaopay' : 'inicis';
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>결제</title>
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+<body>
+  <div id="payment-container" style="padding: 20px;">
+    <h2>레고 브릭 빌드업 예약 결제</h2>
+    <p>결제 금액: ${widget.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원</p>
+    <button id="pay-button" style="padding: 15px 30px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      결제하기
+    </button>
+  </div>
+  
+  <script>
+    IMP.init('${widget.channelKey}');
+    
+    document.getElementById('pay-button').addEventListener('click', function() {
       IMP.request_pay({
-        pg: '${widget.channelKey.contains('kakao') ? 'kakaopay' : 'inicis'}',
+        pg: '$pg',
         pay_method: 'card',
         merchant_uid: '${widget.merchantUid}',
         name: '레고 브릭 빌드업 예약',
@@ -107,35 +137,68 @@ class _IamportPaymentWebViewState extends State<IamportPaymentWebView> {
         buyer_tel: '${widget.customerPhone}',
       }, function(rsp) {
         if (rsp.success) {
-          window.flutter_inappwebview.callHandler('paymentSuccess', rsp);
+          PaymentResult.postMessage(JSON.stringify({
+            success: true,
+            imp_uid: rsp.imp_uid,
+            merchant_uid: rsp.merchant_uid,
+            paid_amount: rsp.paid_amount
+          }));
         } else {
-          window.flutter_inappwebview.callHandler('paymentFail', rsp);
+          PaymentResult.postMessage(JSON.stringify({
+            success: false,
+            error: rsp.error_msg || '결제에 실패했습니다.'
+          }));
         }
       });
+    });
+  </script>
+</body>
+</html>
     ''';
-
-    _controller.runJavaScript(paymentScript);
   }
 
-  void _handlePaymentSuccess(String url) {
-    // URL에서 결제 정보 추출
-    final uri = Uri.parse(url);
-    final impUid = uri.queryParameters['imp_uid'];
-    final merchantUid = uri.queryParameters['merchant_uid'];
-
-    Navigator.of(context).pop({
-      'success': true,
-      'imp_uid': impUid,
-      'merchant_uid': merchantUid ?? widget.merchantUid,
-    });
+  void _loadIamportSDK() {
+    // SDK는 HTML에 이미 포함되어 있음
   }
 
-  void _handlePaymentFailure(String url) {
-    Navigator.of(context).pop({
-      'success': false,
-      'error': '결제가 취소되었습니다.',
-    });
+  void _handlePaymentSuccessFromJS(String data) {
+    try {
+      // JSON 파싱 (간단한 형태)
+      final impUid = data.contains('imp_uid') 
+          ? data.split('imp_uid')[1].split('"')[2] 
+          : widget.merchantUid;
+      
+      if (mounted) {
+        Navigator.of(context).pop({
+          'success': true,
+          'imp_uid': impUid,
+          'merchant_uid': widget.merchantUid,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop({
+          'success': true,
+          'imp_uid': widget.merchantUid,
+          'merchant_uid': widget.merchantUid,
+        });
+      }
+    }
   }
+
+  void _handlePaymentFailureFromJS(String data) {
+    final error = data.contains('error') 
+        ? data.split('error')[1].split('"')[2] 
+        : '결제에 실패했습니다.';
+    
+    if (mounted) {
+      Navigator.of(context).pop({
+        'success': false,
+        'error': error,
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

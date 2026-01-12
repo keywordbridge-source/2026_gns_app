@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/firebase_service.dart';
 import '../../services/additional_fee_service.dart';
 import '../../models/reservation.dart';
+import 'admin/manual_reservation_screen.dart';
+import 'admin/edit_reservation_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -89,73 +91,126 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Future<void> _showWeeklyRevenue() async {
     final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeek = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
     
-    int totalRevenue = 0;
-    int totalReservations = 0;
-    
-    for (int i = 0; i < 7; i++) {
-      final date = startOfWeek.add(Duration(days: i));
-      final reservations = await FirebaseService.getReservationsByDate(date);
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final reservations = await FirebaseService.getReservationsByDateRange(
+        startOfWeek,
+        endOfWeek,
+      );
+      
+      int totalRevenue = 0;
+      int totalReservations = 0;
+      int totalAdditionalFee = 0;
       
       for (final reservation in reservations) {
         if (reservation.status != ReservationStatus.cancelled) {
           totalRevenue += reservation.totalAmount;
           if (reservation.additionalFee != null) {
-            totalRevenue += reservation.additionalFee!;
+            totalAdditionalFee += reservation.additionalFee!;
           }
           totalReservations++;
         }
       }
-    }
-    
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('주간 매출'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('기간: ${DateFormat('yyyy-MM-dd').format(startOfWeek)} ~ ${DateFormat('yyyy-MM-dd').format(endOfWeek)}'),
-              Text('총 예약 수: $totalReservations건'),
-              Text(
-                '총 매출: ${totalRevenue.toString().replaceAllMapped(
-                      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                      (Match m) => '${m[1]},',
-                    )}원',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      
+      final grandTotal = totalRevenue + totalAdditionalFee;
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('주간 매출'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '기간: ${DateFormat('yyyy-MM-dd').format(startOfWeek)} ~ ${DateFormat('yyyy-MM-dd').format(endOfWeek)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('총 예약 수: $totalReservations건'),
+                  const SizedBox(height: 8),
+                  Text(
+                    '기본 요금: ${totalRevenue.toString().replaceAllMapped(
+                          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                          (Match m) => '${m[1]},',
+                        )}원',
+                  ),
+                  Text(
+                    '추가 요금: ${totalAdditionalFee.toString().replaceAllMapped(
+                          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                          (Match m) => '${m[1]},',
+                        )}원',
+                  ),
+                  const Divider(),
+                  Text(
+                    '총 매출: ${grandTotal.toString().replaceAllMapped(
+                          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                          (Match m) => '${m[1]},',
+                        )}원',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('확인'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('주간 매출 조회 중 오류: $e')),
+        );
+      }
     }
   }
 
   Future<void> _showManualReservation() async {
-    // 수동 예약 기능은 별도 화면으로 구현 필요
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('수동 예약 기능은 준비 중입니다.')),
-      );
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ManualReservationScreen(),
+      ),
+    );
+    
+    if (result == true) {
+      await _loadReservations();
     }
   }
 
   Future<void> _editReservation(Reservation reservation) async {
-    // 예약 변경 기능은 별도 화면으로 구현 필요
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예약 변경 기능은 준비 중입니다.')),
-      );
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditReservationScreen(reservation: reservation),
+      ),
+    );
+    
+    if (result == true) {
+      await _loadReservations();
     }
   }
 
@@ -201,7 +256,31 @@ class _AdminScreenState extends State<AdminScreen> {
     if (_reservations == null) return 0;
     return _reservations!
         .where((r) => r.status != ReservationStatus.cancelled)
-        .fold(0, (sum, r) => sum + r.totalAmount);
+        .fold(0, (sum, r) {
+          final baseAmount = sum + r.totalAmount;
+          final additionalFee = r.additionalFee ?? 0;
+          return baseAmount + additionalFee;
+        });
+  }
+
+  Future<void> _calculateAdditionalFeeForReservation(Reservation reservation) async {
+    if (reservation.usageStartTime == null) return;
+    
+    try {
+      await AdditionalFeeService.calculateAndUpdateAdditionalFee(reservation);
+      await _loadReservations();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('추가 요금이 계산되었습니다.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('추가 요금 계산 중 오류: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -321,6 +400,15 @@ class _AdminScreenState extends State<AdminScreen> {
                               ElevatedButton(
                                 onPressed: () => _startUsage(reservation),
                                 child: const Text('사용시작'),
+                              ),
+                            if (reservation.status == ReservationStatus.inUse)
+                              ElevatedButton(
+                                onPressed: () => _calculateAdditionalFeeForReservation(reservation),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('추가요금계산'),
                               ),
                             PopupMenuButton(
                               itemBuilder: (context) => [

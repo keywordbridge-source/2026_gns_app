@@ -82,6 +82,8 @@ class FirebaseService {
           .collection('reservations')
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+          .orderBy('date')
+          .orderBy('startHour')
           .get();
       
       return snapshot.docs
@@ -92,6 +94,32 @@ class FirebaseService {
           .toList();
     } catch (e) {
       print('Error getting reservations: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Reservation>> getReservationsByDateRange(
+      DateTime startDate, DateTime endDate) async {
+    try {
+      final startOfDay = DateTime(startDate.year, startDate.month, startDate.day);
+      final endOfDay = DateTime(endDate.year, endDate.month, endDate.day)
+          .add(const Duration(days: 1));
+      
+      final snapshot = await _firestore
+          .collection('reservations')
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+          .orderBy('date')
+          .get();
+      
+      return snapshot.docs
+          .map((doc) => Reservation.fromMap({
+                'id': doc.id,
+                ...doc.data(),
+              }))
+          .toList();
+    } catch (e) {
+      print('Error getting reservations by date range: $e');
       return [];
     }
   }
