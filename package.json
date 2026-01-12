@@ -1,0 +1,14 @@
+{
+  "name": "2026-gns-app",
+  "version": "1.0.0",
+  "description": "2026 GNS App",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Development server starting...'",
+    "build": "echo 'Building project...'",
+    "start": "echo 'Starting application...'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
