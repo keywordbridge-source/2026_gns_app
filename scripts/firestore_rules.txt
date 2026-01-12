@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // buildKits: 모든 사용자가 읽기 가능
+    match /buildKits/{kitId} {
+      allow read: if true;
+      allow write: if false; // 관리자만 수정 가능하도록 나중에 인증 추가
+    }
+    
+    // reservations: 예약 관리
+    match /reservations/{reservationId} {
+      // 읽기: 모든 사용자 허용 (예약자 이름/비밀번호로 검증은 앱에서)
+      allow read: if true;
+      
+      // 생성: 모든 사용자 허용 (예약 생성)
+      allow create: if true;
+      
+      // 수정: 모든 사용자 허용 (예약 수정, 상태 변경)
+      allow update: if true;
+      
+      // 삭제: 허용 안 함 (소프트 삭제로 cancelled 상태 사용)
+      allow delete: if false;
+    }
+  }
+}

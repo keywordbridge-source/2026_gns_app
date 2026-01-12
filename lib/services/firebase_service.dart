@@ -38,6 +38,29 @@ class FirebaseService {
     }
   }
 
+  static Future<void> addBuildKit(BuildKit kit) async {
+    try {
+      await _firestore.collection('buildKits').add(kit.toMap());
+    } catch (e) {
+      print('Error adding build kit: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> addBuildKitsBatch(List<BuildKit> kits) async {
+    try {
+      final batch = _firestore.batch();
+      for (final kit in kits) {
+        final docRef = _firestore.collection('buildKits').doc();
+        batch.set(docRef, kit.toMap());
+      }
+      await batch.commit();
+    } catch (e) {
+      print('Error adding build kits batch: $e');
+      rethrow;
+    }
+  }
+
   // Reservations
   static Future<String> createReservation(Reservation reservation) async {
     try {

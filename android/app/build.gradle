@@ -81,3 +81,9 @@ android {
 flutter {
     source = "../.."
 }
+
+// Google Services 플러그인 적용 (google-services.json 파일이 있을 때만)
+def googleServicesFile = file('google-services.json')
+if (googleServicesFile.exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}

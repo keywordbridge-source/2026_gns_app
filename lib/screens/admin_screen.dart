@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/firebase_service.dart';
 import '../../services/additional_fee_service.dart';
 import '../../models/reservation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -218,6 +219,27 @@ class _AdminScreenState extends State<AdminScreen> {
             icon: const Icon(Icons.add),
             onPressed: _showManualReservation,
             tooltip: '수동 예약',
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.inventory_2),
+            tooltip: '키트 관리',
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'add',
+                child: Text('키트 추가'),
+              ),
+              const PopupMenuItem(
+                value: 'batch',
+                child: Text('키트 일괄 추가'),
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'add') {
+                context.push('/admin/add-kit');
+              } else if (value == 'batch') {
+                context.push('/admin/batch-add-kits');
+              }
+            },
           ),
         ],
       ),
