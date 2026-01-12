@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 빌드업 키트 이미지 - 모든 사용자가 읽기 가능
+    match /buildKits/{kitId}/{imageName} {
+      allow read: if true;
+      allow write: if false; // 앱에서만 업로드 (인증 추가 가능)
+    }
+    
+    // 기타 파일들
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

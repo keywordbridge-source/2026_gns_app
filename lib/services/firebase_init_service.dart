@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import '../firebase_options.dart'; // flutterfire configure 후 주석 해제
+import '../firebase_options.dart';
 
 class FirebaseInitService {
   static bool _initialized = false;
@@ -10,13 +10,10 @@ class FirebaseInitService {
 
     try {
       // Firebase 초기화
-      // flutterfire configure 실행 후 아래 주석 해제
-      // await Firebase.initializeApp(
-      //   options: DefaultFirebaseOptions.currentPlatform,
-      // );
-      
-      // 임시: firebase_options.dart가 없을 때는 기본 초기화
-      await Firebase.initializeApp();
+      // firebase_options.dart 파일의 값이 올바르게 설정되었는지 확인하세요
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       
       // Firestore 설정
       FirebaseFirestore.instance.settings = const Settings(

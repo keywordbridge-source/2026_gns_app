@@ -38,9 +38,10 @@ class FirebaseService {
     }
   }
 
-  static Future<void> addBuildKit(BuildKit kit) async {
+  static Future<String> addBuildKit(BuildKit kit) async {
     try {
-      await _firestore.collection('buildKits').add(kit.toMap());
+      final docRef = await _firestore.collection('buildKits').add(kit.toMap());
+      return docRef.id;
     } catch (e) {
       print('Error adding build kit: $e');
       rethrow;

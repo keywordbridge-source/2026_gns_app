@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "87443577978",
+    "project_id": "brick-reserve",
+    "storage_bucket": "brick-reserve.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87443577978:android:86f4a08f06f105883aefc3",
+        "android_client_info": {
+          "package_name": "com.brickreserve.reserve"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAg7AEMBpm7bvVxA5cfQcCFnU2riNVfjfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
